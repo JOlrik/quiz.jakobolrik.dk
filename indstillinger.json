@@ -1,0 +1,17 @@
+{
+  "adresse": "https://quiz.jakobolrik.dk",
+  "hjemmeside": "https://jakobolrik.dk",
+  "kurser": {
+    "1": { "navn": "Date med hjertet", "url": "https://jakobolrik.dk/datingkursus", "rabatkode": "" },
+    "2": { "navn": "Sex & Kærlighedselementerne", "url": "https://jakobolrik.dk/onlinekurser", "rabatkode": "" },
+    "3": { "navn": "Elsk Din Krop", "url": "https://jakobolrik.dk/kropskursus", "rabatkode": "" },
+    "4": { "navn": "Orgasmens Hemmeligheder", "url": "https://jakobolrik.dk/orgasmekursus", "rabatkode": "" }
+  },
+  "udeladt": {
+    "3": "svarene er billeder, og billederne er ikke med i backuppen",
+    "21": "Strip Olrik bygger på billeder af Jakob, der ikke er med i backuppen",
+    "48": "gyserbog-quiz hører til Bonniers kursus",
+    "57": "engelsk kopi af 'Hvor god er du i sengen?'"
+  },
+  "skjult": [10, 11, 17, 24, 35, 37, 43]
+}
