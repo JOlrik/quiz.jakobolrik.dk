@@ -12,14 +12,17 @@ import html
 import json
 import re
 import shutil
+import subprocess
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 HER = Path(__file__).resolve().parent
 UD = HER / 'site'
+CACHE = HER / 'medier-cache'
 IND = json.loads((HER / 'indstillinger.json').read_text())
 DATA = json.loads((HER / 'data' / 'quizzer.json').read_text())
+MEDIER = json.loads((HER / 'data' / 'medier.json').read_text())
 ADR = IND['adresse'].rstrip('/')
 
 FB_IKON = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 '
@@ -94,6 +97,56 @@ def side(titel, beskrivelse, url, billede, indhold, dybde, script=''):
 '''
 
 
+# ---------- billeder og videoer fra den gamle platform ----------
+
+def medie(art, id_):
+    """Webudgave af et originalt billede/video fra den gamle platform (data/medier.json → originaler/)."""
+    rel = MEDIER.get(art, {}).get(str(id_))
+    return medie_fil(HER / rel) if rel else None
+
+
+def foto(id_):
+    """Foto fra Jakobs egen fotoserie (fotos/), valgt pr. quiz i indstillinger.json."""
+    navn = IND.get('fotos', {}).get(str(id_))
+    return medie_fil(HER / 'fotos' / f'{navn}.jpg') if navn else None
+
+
+def medie_fil(kilde):
+    """Lægger en webudgave af kilden i site/medier/. Giver (sti, 'billede'|'video') eller None.
+
+    De nedskalerede udgaver gemmes i medier-cache/, så videoerne kun konverteres én gang.
+    """
+    if not kilde.exists():
+        return None
+    CACHE.mkdir(exist_ok=True)
+    if kilde.suffix.lower() in ('.jpg', '.jpeg', '.png'):
+        navn, slags = f'{kilde.stem}.jpg', 'billede'
+        if not (CACHE / navn).exists():
+            im = ImageOps.exif_transpose(Image.open(kilde)).convert('RGB')
+            im.thumbnail((1400, 1400))
+            im.save(CACHE / navn, 'JPEG', quality=80, optimize=True, progressive=True)
+    elif kilde.suffix.lower() in ('.mp4', '.mov', '.m4v'):
+        navn, slags = f'{kilde.stem}.mp4', 'video'
+        if not (CACHE / navn).exists():
+            subprocess.run(['avconvert', '-p', 'Preset960x540', '-s', str(kilde), '-o', str(CACHE / navn)],
+                           check=True, capture_output=True)
+    else:
+        return None
+    (UD / 'medier').mkdir(exist_ok=True)
+    if not (UD / 'medier' / navn).exists():
+        shutil.copy(CACHE / navn, UD / 'medier' / navn)
+    return f'medier/{navn}', slags
+
+
+def medie_html(m, rod, klasse):
+    if not m:
+        return ''
+    sti, slags = m
+    if slags == 'video':
+        return f'<video class="{klasse}" src="{rod}{sti}" controls playsinline preload="metadata"></video>'
+    return f'<img class="{klasse}" src="{rod}{sti}" alt="" loading="lazy">'
+
+
 # ---------- delebilleder ----------
 
 SERIF = str(HER / 'fonts' / 'InstrumentSerif-Regular.ttf')
@@ -124,16 +177,24 @@ def ombryd(draw, tekst, font, bredde):
     return linjer
 
 
-def billede(sti, etiket, overskrift, undertekst):
+def billede(sti, etiket, overskrift, undertekst, foto=None):
     W, H, M = 1200, 630, 80
     img = Image.new('RGB', (W, H), '#171816')
+    bredde = W - 2 * M
+    if foto and foto[1] == 'billede':
+        # fotoet i højre side, glidende over i den mørke flade bag teksten
+        X, B = 620, 160
+        img.paste(ImageOps.fit(Image.open(UD / foto[0]).convert('RGB'), (W - X, H)), (X, 0))
+        maske = Image.linear_gradient('L').rotate(-90).resize((B, H))
+        img.paste(Image.new('RGB', (B, H), '#171816'), (X, 0), maske)
+        bredde = X - M
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, W, 8], fill='#B76F51')
     d.text((M, 72), etiket.upper(), font=sans(24), fill='#CB9174')
     # største skrift, hvor overskriften kan stå på højst 3 linjer
     for str_ in (104, 92, 82, 72, 64, 56, 50):
         f = ImageFont.truetype(SERIF, str_)
-        linjer = ombryd(d, overskrift, f, W - 2 * M)
+        linjer = ombryd(d, overskrift, f, bredde)
         if len(linjer) <= 3:
             break
     y = 140 + (3 - len(linjer)) * str_ * 0.35
@@ -142,12 +203,15 @@ def billede(sti, etiket, overskrift, undertekst):
         y += str_ * 1.08
     if undertekst:
         f2 = sans(28)
-        u = ombryd(d, undertekst, f2, W - 2 * M)[:2]
+        u = ombryd(d, undertekst, f2, bredde)[:2]
         uy = H - 72 - 40 * (len(u) - 1)
         for l in u:
             d.text((M, uy), l, font=f2, fill='#B7B5AC', anchor='ls')
             uy += 40
-    d.text((W - M, H - 72), 'jakobolrik.dk', font=sans(24), fill='#B7B5AC', anchor='rs')
+    if bredde == W - 2 * M:
+        d.text((W - M, H - 72), 'jakobolrik.dk', font=sans(24), fill='#B7B5AC', anchor='rs')
+    else:
+        d.text((M + d.textlength(etiket.upper(), font=sans(24)) + 16, 72), '· JAKOBOLRIK.DK', font=sans(24), fill='#B7B5AC')
     img.save(sti, optimize=True)
 
 
@@ -190,22 +254,30 @@ def main():
                 rs = f"{slug(r['title'])}-{n}"
                 n += 1
             rslugs.add(rs)
-            resultater.append({'id': str(r['id']), 'slug': rs, 'titel': r['title'].strip(), 'tekst': r['description']})
+            resultater.append({'id': str(r['id']), 'slug': rs, 'titel': r['title'].strip(), 'tekst': r['description'],
+                               'medie': medie('resultater', r['id'])})
+
+        def spm_medie(q):
+            m = medie('spoergsmaal', q['id'])
+            return {'sti': '../' + m[0], 'slags': m[1]} if m else None
 
         quizdata = {
             'resultater': [{'id': r['id'], 'slug': r['slug']} for r in resultater],
             'spoergsmaal': [{
                 'titel': q['title'].strip(),
                 'beskrivelse': (q['description'] or '').strip(),
+                'medie': spm_medie(q),
                 'svar': [{'titel': a['title'].strip(), 'point': a['points']} for a in sortér_svar(q['answers'])],
             } for q in z['questions']],
         }
         beskr = ' '.join((z['description'] or '').split()) or f'Tag testen og bliv klogere på dig selv. {len(z["questions"])} spørgsmål.'
         minutter = max(1, round(len(z['questions']) * 12 / 60))
+        forside = medie('quiz', z['id']) or foto(z['id'])
 
-        billede(UD / 'billeder' / f'{s}.png', 'Test dig selv', z['title'].strip(), kursus['navn'])
+        billede(UD / 'billeder' / f'{s}.png', 'Test dig selv', z['title'].strip(), kursus['navn'], forside)
         indhold = f'''<section class="quiz"><div class="wrap"><div class="smal">
   <div id="intro" class="intro">
+    {medie_html(forside, '../', 'quiz-billede')}
     <p class="etiket">Test · {e(kursus['navn'])}</p>
     <h1>{e(z['title'].strip())}</h1>
     {f'<p class="lead">{e(beskr)}</p>' if z['description'] else ''}
@@ -215,6 +287,7 @@ def main():
   <div id="spm" class="spoergsmaal skjult">
     <div class="fremdrift"><span id="spm-bar"></span></div>
     <div class="taeller"><span id="spm-taeller"></span><button id="spm-tilbage" class="tilbage skjult" type="button">← Tilbage</button></div>
+    <div id="spm-medie"></div>
     <h2 id="spm-titel"></h2>
     <p id="spm-beskrivelse" class="beskrivelse"></p>
     <ul id="spm-svar" class="svar"></ul>
@@ -230,7 +303,8 @@ def main():
             rmappe = mappe / r['slug']
             rmappe.mkdir()
             bnavn = f"{s}--{r['slug']}.png"
-            billede(UD / 'billeder' / bnavn, 'Mit resultat', r['titel'], z['title'].strip())
+            billede(UD / 'billeder' / bnavn, 'Mit resultat', r['titel'], z['title'].strip(),
+                    r['medie'] if r['medie'] and r['medie'][1] == 'billede' else forside)
             rurl = f"{url}{r['slug']}/"
             fb = 'https://www.facebook.com/sharer/sharer.php?u=' + html.escape(rurl, quote=True)
             rabat = (f'<p>Brug koden <span class="kode">{e(kursus["rabatkode"])}</span> og få rabat på kurset.</p>'
@@ -238,6 +312,7 @@ def main():
             rindhold = f'''<section class="resultat"><div class="wrap"><div class="smal">
   <p class="etiket"><span class="mit-tekst skjult">Dit resultat · </span>{e(z['title'].strip())}</p>
   <h1>{e(r['titel'])}</h1>
+  {medie_html(r['medie'], '../../', 'resultat-medie')}
   <div class="tekst">{afsnit(r['tekst'])}</div>
   <div class="knapper mit skjult">
     <a class="knap fb" href="{fb}" target="_blank" rel="noopener">{FB_IKON}Del på Facebook</a>
@@ -271,15 +346,16 @@ def main():
             rtitel = f"{r['titel']} – {z['title'].strip()}"
             (rmappe / 'index.html').write_text(side(rtitel, kort_tekst(r['tekst']), rurl, f'{ADR}/billeder/{bnavn}', rindhold, 2, rscript))
 
-        oversigt.append((z, s, beskr, kursus))
+        oversigt.append((z, s, beskr, kursus, forside))
 
     # forside med de synlige quizzer
     kort = '\n'.join(f'''  <a class="kort" href="{s}/">
+    {medie_html(f, '', 'kort-billede')}
     <p class="etiket">{e(k['navn'])}</p>
     <h3>{e(z['title'].strip())}</h3>
     <p>{e(kort_tekst(b, 120))}</p>
     <span class="mere">Tag testen →</span>
-  </a>''' for z, s, b, k in oversigt if z['id'] not in skjult)
+  </a>''' for z, s, b, k, f in oversigt if z['id'] not in skjult)
     forside = f'''<section class="hero"><div class="wrap">
   <p class="etiket">Test dig selv</p>
   <h1>Hvem er du, når det gælder kærlighed og sex?</h1>
@@ -288,7 +364,8 @@ def main():
 <section><div class="wrap"><div class="gitter">
 {kort}
 </div></div></section>'''
-    billede(UD / 'billeder' / 'forside.png', 'Test dig selv', 'Hvem er du, når det gælder kærlighed og sex?', 'Små tests fra sexolog Jakob Olrik')
+    billede(UD / 'billeder' / 'forside.png', 'Test dig selv', 'Hvem er du, når det gælder kærlighed og sex?', 'Små tests fra sexolog Jakob Olrik',
+            medie_fil(HER / 'fotos' / f"{IND['forside_foto']}.jpg") if IND.get('forside_foto') else None)
     (UD / 'index.html').write_text(side('Test dig selv – Jakob Olrik', 'Små tests om kærlighed, dating og sex fra sexolog Jakob Olrik.',
                                         f'{ADR}/', f'{ADR}/billeder/forside.png', forside, 0))
     (UD / '404.html').write_text(side('Siden findes ikke – Jakob Olrik', '', f'{ADR}/', f'{ADR}/billeder/forside.png',

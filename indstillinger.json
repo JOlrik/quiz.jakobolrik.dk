@@ -2,10 +2,26 @@
   "adresse": "https://quiz.jakobolrik.dk",
   "hjemmeside": "https://jakobolrik.dk",
   "kurser": {
-    "1": { "navn": "Date med hjertet", "url": "https://jakobolrik.dk/datingkursus", "rabatkode": "" },
-    "2": { "navn": "Sex & Kærlighedselementerne", "url": "https://jakobolrik.dk/onlinekurser", "rabatkode": "" },
-    "3": { "navn": "Elsk Din Krop", "url": "https://jakobolrik.dk/kropskursus", "rabatkode": "" },
-    "4": { "navn": "Orgasmens Hemmeligheder", "url": "https://jakobolrik.dk/orgasmekursus", "rabatkode": "" }
+    "1": {
+      "navn": "Date med hjertet",
+      "url": "https://jakobolrik.dk/datingkursus",
+      "rabatkode": ""
+    },
+    "2": {
+      "navn": "Sex & Kærlighedselementerne",
+      "url": "https://jakobolrik.dk/onlinekurser",
+      "rabatkode": ""
+    },
+    "3": {
+      "navn": "Elsk Din Krop",
+      "url": "https://jakobolrik.dk/kropskursus",
+      "rabatkode": ""
+    },
+    "4": {
+      "navn": "Orgasmens Hemmeligheder",
+      "url": "https://jakobolrik.dk/orgasmekursus",
+      "rabatkode": ""
+    }
   },
   "udeladt": {
     "3": "svarene er billeder, og billederne er ikke med i backuppen",
@@ -13,5 +29,35 @@
     "48": "gyserbog-quiz hører til Bonniers kursus",
     "57": "engelsk kopi af 'Hvor god er du i sengen?'"
   },
-  "skjult": [10, 11, 17, 24, 35, 37, 43]
+  "skjult": [
+    10,
+    11,
+    17,
+    24,
+    35,
+    37,
+    43
+  ],
+  "forside_foto": "ol06",
+  "fotos": {
+    "10": "ol16",
+    "11": "ol07",
+    "12": "ol24",
+    "16": "ol14",
+    "18": "ol20",
+    "22": "ol19",
+    "19": "ol26",
+    "23": "ol15",
+    "24": "ol10",
+    "27": "ol05",
+    "35": "ol13",
+    "39": "ol27",
+    "41": "ol17",
+    "42": "js1857",
+    "43": "ol23",
+    "13": "js1675",
+    "15": "ol04",
+    "17": "ol02",
+    "37": "js1421"
+  }
 }

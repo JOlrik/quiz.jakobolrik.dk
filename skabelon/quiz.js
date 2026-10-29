@@ -10,6 +10,7 @@
   var taeller = document.getElementById('spm-taeller');
   var bar = document.getElementById('spm-bar');
   var tilbage = document.getElementById('spm-tilbage');
+  var medie = document.getElementById('spm-medie');
 
   var valg = [];
   var nr = 0;
@@ -23,6 +24,14 @@
     taeller.textContent = 'Spørgsmål ' + (i + 1) + ' af ' + data.spoergsmaal.length;
     bar.style.width = (i / data.spoergsmaal.length * 100) + '%';
     tilbage.classList.toggle('skjult', i === 0);
+    medie.innerHTML = '';
+    if (q.medie) {
+      var el = document.createElement(q.medie.slags === 'video' ? 'video' : 'img');
+      el.src = q.medie.sti;
+      if (q.medie.slags === 'video') { el.controls = true; el.playsInline = true; el.preload = 'metadata'; }
+      else el.alt = '';
+      medie.appendChild(el);
+    }
     liste.innerHTML = '';
     q.svar.forEach(function (s, j) {
       var li = document.createElement('li');
