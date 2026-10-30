@@ -234,8 +234,13 @@ def main():
     oversigt = []
 
     for z in DATA:
+        # spørgsmål, hvis svar står på et billede, kommer først med, når billedet findes
+        sprunget = [q['title'] for q in z['questions'] if kraever_billede(q) and not medie('spoergsmaal', q['id'])]
+        z = dict(z, questions=[q for q in z['questions'] if not kraever_billede(q) or medie('spoergsmaal', q['id'])])
         if z['id'] in udeladt or len(z['questions']) < 4 or len(z['results']) < 2:
             continue
+        if sprunget:
+            print(f"  {z['title']}: sprunget over, mangler billede: {sprunget}")
         kursus = IND['kurser'][str(z['course_id'])]
         s = slug(z['title'])
         while s in brugte:
@@ -376,6 +381,12 @@ def main():
     print(f'{len(oversigt)} quizzer bygget ({synlige} på forsiden) i {UD}')
     for z, s, *_ in oversigt:
         print(f"  {'   ' if z['id'] not in skjult else 'skj'} /{s}/")
+
+
+def kraever_billede(q):
+    # svarene er bare bogstaver (A., B., ...), eller spørgsmålet henviser til billeder
+    kun_bogstaver = q['answers'] and all(re.fullmatch(r'[A-ZÆØÅ][\W_]*', a['title'].strip()) for a in q['answers'])
+    return bool(kun_bogstaver) or 'billede' in q['title'].lower() or q['title'].strip() == '?'
 
 
 def sortér_svar(svar):
