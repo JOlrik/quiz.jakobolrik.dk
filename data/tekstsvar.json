@@ -1,0 +1,15 @@
+{
+  "118": {"titel": "Hund eller kat?"},
+  "136": {"titel": "Hund eller kat?"},
+  "156": {"titel": "Planteæder eller kødæder?", "svar": {"555": "A. Planteæder", "556": "B. Kødæder"}},
+  "162": {"titel": "Hund eller kat?"},
+  "157": {"titel": "Hvordan nærmer du dig din næste elsker?", "svar": {"558": "A. Jeg går på jagt.", "559": "B. Jeg lader vedkommende komme tæt på, lidt efter lidt."}},
+  "305": {"titel": "Hvor mange af de her fire ting provokerer dig?", "beskrivelse": "En sniger sig foran dig i køen. En kollega tager æren for dit arbejde. Din kæreste kigger på telefonen, mens du taler. Naboen larmer klokken to om natten.", "svar": {"1058": "A. 1"}},
+  "92": {"svar": {"328": "A. At slippe alt og være helt fri.", "329": "B. En stærk, svedig krop.", "330": "C. Et blik, der bliver hængende.", "331": "D. Det skifter fra dag til dag."}},
+  "95": {"svar": {"341": "A. Under åben himmel med stjernerne over os.", "339": "B. I en stor seng med levende lys.", "340": "C. I bruseren efter træning.", "338": "D. Alle andre steder end i sengen. Gerne hvor vi kan blive opdaget."}},
+  "94": {"svar": {"334": "A. Barn", "337": "B. Teenager", "335": "C. Voksen", "336": "D. Ældre"}},
+  "296": {"svar": {"1028": "A. En bjergtop, hvor vinden river i jakken.", "1029": "B. En stille sø ved en have, du selv har plantet."}},
+  "295": {"svar": {"1043": "A. Et lyn over et mørkt hav.", "1044": "B. Et gammelt bibliotek med tunge egetræsborde."}},
+  "84": {"svar": {"295": "A. Fingerfærdighed. Rytmen sidder i hænderne.", "296": "B. Tankens kraft. Jeg når langt uden at røre mig.", "297": "C. Fantasien. Jeg skriver hele historien i hovedet.", "298": "D. Det solide værktøj. Jeg ved, hvad der virker."}},
+  "82": {"svar": {"288": "A. En velholdt værktøjskasse.", "287": "B. Et flygel i en tom sal.", "286": "C. Et kærlighedsbrev, hvor blækket er løbet ud.", "285": "D. En munk, der mediterer ved solopgang."}}
+}

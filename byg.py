@@ -23,6 +23,17 @@ CACHE = HER / 'medier-cache'
 IND = json.loads((HER / 'indstillinger.json').read_text())
 DATA = json.loads((HER / 'data' / 'quizzer.json').read_text())
 MEDIER = json.loads((HER / 'data' / 'medier.json').read_text())
+TEKSTSVAR = json.loads((HER / 'data' / 'tekstsvar.json').read_text())
+
+# Nye tekster til spørgsmål, hvor svarene stod på et billede, der er gået tabt. Pointene er uændrede.
+for _z in DATA:
+    for _q in _z['questions']:
+        _ret = TEKSTSVAR.get(str(_q['id']))
+        if _ret:
+            _q['title'] = _ret.get('titel', _q['title'])
+            _q['description'] = _ret.get('beskrivelse', _q['description'])
+            for _a in _q['answers']:
+                _a['title'] = _ret.get('svar', {}).get(str(_a['id']), _a['title'])
 ADR = IND['adresse'].rstrip('/')
 
 FB_IKON = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 '
@@ -384,6 +395,8 @@ def main():
 
 
 def kraever_billede(q):
+    if str(q['id']) in TEKSTSVAR:
+        return False
     # svarene er bare bogstaver (A., B., ...), eller spørgsmålet henviser til billeder
     kun_bogstaver = q['answers'] and all(re.fullmatch(r'[A-ZÆØÅ][\W_]*', a['title'].strip()) for a in q['answers'])
     return bool(kun_bogstaver) or 'billede' in q['title'].lower() or q['title'].strip() == '?'

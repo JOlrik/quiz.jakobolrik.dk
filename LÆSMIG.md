@@ -28,3 +28,7 @@ Efter en ændring bygges sitet igen med:
 - `skabelon/style.css` og `skabelon/quiz.js`: udseende og quizmotor
 - `fonts/`: Instrument Serif og DM Sans (fri licens, OFL) til delebillederne
 - `site/`: det færdige site, der skal lægges online
+
+## Tekstsvar
+
+`data/tekstsvar.json` giver spørgsmål nye tekster, hvor svarene stod på billeder, der er gået tabt. Pointene er uændrede.
