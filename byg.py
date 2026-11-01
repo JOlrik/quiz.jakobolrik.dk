@@ -34,6 +34,28 @@ for _z in DATA:
             _q['description'] = _ret.get('beskrivelse', _q['description'])
             for _a in _q['answers']:
                 _a['title'] = _ret.get('svar', {}).get(str(_a['id']), _a['title'])
+
+# Rettelser af hele quizzer. Den gamle titel gemmes, så gamle links kan henvise til de nye adresser.
+TEKSTRETTELSER = json.loads((HER / 'data' / 'tekstrettelser.json').read_text())
+for _z in DATA:
+    _ret = TEKSTRETTELSER.get(str(_z['id']))
+    if not _ret:
+        continue
+    _z['gammel_titel'], _z['title'], _z['description'] = _z['title'], _ret['titel'], _ret['beskrivelse']
+    for _q in _z['questions']:
+        _s = _ret['spoergsmaal'].get(str(_q['id']), {})
+        _q['title'] = _s.get('titel', _q['title'])
+        for _a in _q['answers']:
+            _a['title'] = _s.get('svar', {}).get(str(_a['id']), _a['title'])
+    for _r in _z['results']:
+        _r['gammel_titel'], _r['title'] = _r['title'], _ret['resultater'][str(_r['id'])]
+    for _foer, _efter in _ret['erstat_i_resultater']:
+        if not any(_foer in _r['description'] for _r in _z['results']):
+            raise SystemExit(f'Rettelse rammer ingenting: {_foer}')
+        for _r in _z['results']:
+            _r['description'] = _r['description'].replace(_foer, _efter)
+    for _r in _z['results']:
+        _r['description'] = _r['description'].strip()
 ADR = IND['adresse'].rstrip('/')
 
 FB_IKON = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 '
@@ -273,6 +295,11 @@ def main():
             resultater.append({'id': str(r['id']), 'slug': rs, 'titel': r['title'].strip(), 'tekst': r['description'],
                                'medie': medie('resultater', r['id'])})
 
+        if z.get('gammel_titel'):
+            henvis(slug(z['gammel_titel']), s)
+            for r, rd in zip(z['results'], resultater):
+                henvis(f"{slug(z['gammel_titel'])}/{slug(r['gammel_titel'])}", f"{s}/{rd['slug']}")
+
         def spm_medie(q):
             m = medie('spoergsmaal', q['id'])
             return {'sti': '../' + m[0], 'slags': m[1]} if m else None
@@ -392,6 +419,20 @@ def main():
     print(f'{len(oversigt)} quizzer bygget ({synlige} på forsiden) i {UD}')
     for z, s, *_ in oversigt:
         print(f"  {'   ' if z['id'] not in skjult else 'skj'} /{s}/")
+
+
+def henvis(fra, til):
+    # en lille side, der sender et gammelt link videre til den nye adresse
+    url = f'{ADR}/{til}/'
+    mappe = UD / fra
+    mappe.mkdir(parents=True, exist_ok=True)
+    (mappe / 'index.html').write_text(f'''<!doctype html>
+<html lang="da"><head><meta charset="utf-8"><title>Siden er flyttet</title>
+<link rel="canonical" href="{url}"><meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url={url}">
+<script>location.replace({json.dumps(url)} + location.search);</script></head>
+<body><a href="{url}">Gå til siden</a></body></html>
+''')
 
 
 def kraever_billede(q):

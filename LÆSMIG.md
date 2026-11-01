@@ -32,3 +32,5 @@ Efter en ændring bygges sitet igen med:
 ## Tekstsvar
 
 `data/tekstsvar.json` giver spørgsmål nye tekster, hvor svarene stod på billeder, der er gået tabt. Pointene er uændrede.
+
+`data/tekstrettelser.json` retter hele quizzer (titel, resultater, tekst). Ændres en titel, laver `byg.py` selv henvisninger fra de gamle adresser.
