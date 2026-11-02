@@ -56,6 +56,18 @@ for _z in DATA:
             _r['description'] = _r['description'].replace(_foer, _efter)
     for _r in _z['results']:
         _r['description'] = _r['description'].strip()
+# Anbefalinger skal pege på kurser, der er til salg, og kun love det, kurserne indeholder.
+KURSUSANBEFALINGER = json.loads((HER / 'data' / 'kursusanbefalinger.json').read_text())
+for _z in DATA:
+    _ret = KURSUSANBEFALINGER.get(str(_z['id']))
+    if not _ret:
+        continue
+    _z['course_id'] = _ret.get('kursus', _z['course_id'])
+    for _foer, _efter in _ret['erstat']:
+        if not any(_foer in _r['description'] for _r in _z['results']):
+            raise SystemExit(f'Rettelse rammer ingenting: {_foer}')
+        for _r in _z['results']:
+            _r['description'] = _r['description'].replace(_foer, _efter)
 ADR = IND['adresse'].rstrip('/')
 
 FB_IKON = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 '
@@ -275,6 +287,9 @@ def main():
         if sprunget:
             print(f"  {z['title']}: sprunget over, mangler billede: {sprunget}")
         kursus = IND['kurser'][str(z['course_id'])]
+        for _ord in ('lementerne', 'Kærlighedsmenterne', 'Elsk Dig"', '”Elsk Dig”', 'ertifikat', 'kursus rapport', '7,5 time'):
+            if any(_ord in r['description'] for r in z['results']):
+                raise SystemExit(f'Forældet kursustekst i quiz {z["id"]}: {_ord}')
         s = slug(z['title'])
         while s in brugte:
             s += '-2'

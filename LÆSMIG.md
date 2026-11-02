@@ -34,3 +34,5 @@ Efter en ændring bygges sitet igen med:
 `data/tekstsvar.json` giver spørgsmål nye tekster, hvor svarene stod på billeder, der er gået tabt. Pointene er uændrede.
 
 `data/tekstrettelser.json` retter hele quizzer (titel, resultater, tekst). Ændres en titel, laver `byg.py` selv henvisninger fra de gamle adresser.
+
+`data/kursusanbefalinger.json` retter anbefalingerne i resultaterne, så de peger på kurser, der er til salg (`kursus` = kursus-id i `indstillinger.json`, `erstat` = tekstrettelser). Byggeriet stopper, hvis et resultat stadig nævner et kursus eller en funktion, der ikke findes længere. Når Sex & Kærlighedselementerne er til salg: læg kurset i `indstillinger.json` igen, og fjern det fra rettelserne.
